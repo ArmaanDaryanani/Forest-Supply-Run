@@ -10,10 +10,12 @@ public class PlayerController : MonoBehaviour
 
     CharacterController controller;
     Vector3 verticalVelocity;
+    CheckpointGameManager gameManager;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        gameManager = FindAnyObjectByType<CheckpointGameManager>();
         if (cameraTransform == null && Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
@@ -22,6 +24,11 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (gameManager != null && gameManager.IsGameEnded)
+        {
+            return;
+        }
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 input = new Vector3(horizontal, 0f, vertical).normalized;

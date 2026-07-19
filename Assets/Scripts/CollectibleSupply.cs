@@ -59,7 +59,7 @@ public class CollectibleSupply : MonoBehaviour
     {
         transform.Rotate(0f, 60f * Time.deltaTime, 0f);
 
-        if (player == null || gameManager == null)
+        if (player == null || gameManager == null || gameManager.IsGameEnded)
         {
             return;
         }

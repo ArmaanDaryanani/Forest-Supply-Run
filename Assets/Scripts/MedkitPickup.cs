@@ -1,8 +1,9 @@
 using UnityEngine;
 
-public class CampGoal : MonoBehaviour
+public class MedkitPickup : MonoBehaviour
 {
-    public float interactDistance = 7f;
+    public float interactDistance = 2.4f;
+    public int healAmount = 1;
 
     Transform player;
     CheckpointGameManager gameManager;
@@ -20,6 +21,8 @@ public class CampGoal : MonoBehaviour
 
     void Update()
     {
+        transform.Rotate(0f, 45f * Time.deltaTime, 0f);
+
         if (player == null || gameManager == null || gameManager.IsGameEnded)
         {
             return;
@@ -27,21 +30,11 @@ public class CampGoal : MonoBehaviour
 
         if (Vector3.Distance(transform.position, player.position) <= interactDistance)
         {
-            if (!gameManager.HasAllSupplies)
+            gameManager.ShowPrompt("press e to use medkit");
+            if (Input.GetKeyDown(KeyCode.E))
             {
-                gameManager.ShowPrompt("need all supplies");
-            }
-            else if (!gameManager.HasBattery)
-            {
-                gameManager.ShowPrompt("need radio battery");
-            }
-            else
-            {
-                gameManager.ShowPrompt("press e to call for rescue");
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    gameManager.FinishCheckpoint();
-                }
+                gameManager.HealPlayer(healAmount);
+                Destroy(gameObject);
             }
         }
     }
