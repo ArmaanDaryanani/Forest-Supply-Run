@@ -9,10 +9,12 @@ public class CheckpointGameManager : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip collectSound;
     public AudioClip finishSound;
+    public AudioClip damageSound;
 
     int suppliesCollected;
     int health;
     float timeLeft;
+    float damageFlashTime;
     string promptText = "";
     int promptFrame;
     bool checkpointComplete;
@@ -50,10 +52,20 @@ public class CheckpointGameManager : MonoBehaviour
         {
             finishSound = CreateFinishSound();
         }
+
+        if (damageSound == null)
+        {
+            damageSound = CreateDamageSound();
+        }
     }
 
     void Update()
     {
+        if (damageFlashTime > 0f)
+        {
+            damageFlashTime -= Time.deltaTime;
+        }
+
         if (IsGameEnded)
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -122,6 +134,12 @@ public class CheckpointGameManager : MonoBehaviour
         }
 
         health -= amount;
+        damageFlashTime = 0.45f;
+        if (audioSource != null && damageSound != null)
+        {
+            audioSource.PlayOneShot(damageSound, 1f);
+        }
+
         if (health <= 0)
         {
             health = 0;
@@ -169,39 +187,47 @@ public class CheckpointGameManager : MonoBehaviour
     void OnGUI()
     {
         GUIStyle mainStyle = new GUIStyle(GUI.skin.label);
-        mainStyle.fontSize = 28;
+        mainStyle.fontSize = 20;
         mainStyle.fontStyle = FontStyle.Bold;
         mainStyle.normal.textColor = Color.white;
 
         GUIStyle shadowStyle = new GUIStyle(mainStyle);
         shadowStyle.normal.textColor = Color.black;
 
-        DrawLabel(new Rect(20, 20, 600, 40), "supplies " + suppliesCollected + " / " + totalSupplies, mainStyle, shadowStyle);
-        DrawLabel(new Rect(20, 60, 600, 40), "health " + health + " / " + maxHealth, mainStyle, shadowStyle);
-        DrawLabel(new Rect(20, 100, 600, 40), "time " + Mathf.CeilToInt(timeLeft), mainStyle, shadowStyle);
-        DrawLabel(new Rect(20, 140, 600, 40), "battery " + (hasBattery ? "yes" : "no"), mainStyle, shadowStyle);
+        if (damageFlashTime > 0f)
+        {
+            GUI.color = new Color(1f, 0f, 0f, Mathf.Clamp01(damageFlashTime / 0.45f) * 0.28f);
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+        }
+
+        DrawLabel(new Rect(18, 18, 440, 30), "supplies " + suppliesCollected + " / " + totalSupplies, mainStyle, shadowStyle);
+        DrawLabel(new Rect(18, 46, 440, 30), "health " + health + " / " + maxHealth, mainStyle, shadowStyle);
+        DrawLabel(new Rect(18, 74, 440, 30), "time " + Mathf.CeilToInt(timeLeft), mainStyle, shadowStyle);
+        DrawLabel(new Rect(18, 102, 440, 30), "battery " + (hasBattery ? "yes" : "no"), mainStyle, shadowStyle);
 
         string objective = GetObjectiveText();
-        DrawLabel(new Rect(20, 180, 900, 40), objective, mainStyle, shadowStyle);
+        DrawLabel(new Rect(18, 130, 620, 30), objective, mainStyle, shadowStyle);
 
         if (checkpointComplete || gameOver)
         {
             GUIStyle completeStyle = new GUIStyle(mainStyle);
-            completeStyle.fontSize = 44;
+            completeStyle.fontSize = 32;
             completeStyle.alignment = TextAnchor.MiddleCenter;
             GUIStyle completeShadow = new GUIStyle(completeStyle);
             completeShadow.normal.textColor = Color.black;
             string endText = checkpointComplete ? "you survived\npress space to restart" : "game over\npress space to restart";
-            DrawLabel(new Rect(Screen.width / 2f - 360f, Screen.height / 2f - 80f, 720f, 160f), endText, completeStyle, completeShadow);
+            DrawLabel(new Rect(Screen.width / 2f - 300f, Screen.height / 2f - 70f, 600f, 140f), endText, completeStyle, completeShadow);
         }
 
         if (!string.IsNullOrEmpty(promptText))
         {
             GUIStyle promptStyle = new GUIStyle(mainStyle);
+            promptStyle.fontSize = 22;
             promptStyle.alignment = TextAnchor.MiddleCenter;
             GUIStyle promptShadow = new GUIStyle(promptStyle);
             promptShadow.normal.textColor = Color.black;
-            DrawLabel(new Rect(Screen.width / 2f - 260f, Screen.height - 100f, 520f, 60f), promptText, promptStyle, promptShadow);
+            DrawLabel(new Rect(Screen.width / 2f - 240f, Screen.height - 82f, 480f, 50f), promptText, promptStyle, promptShadow);
         }
     }
 
@@ -251,6 +277,26 @@ public class CheckpointGameManager : MonoBehaviour
         }
 
         AudioClip clip = AudioClip.Create("ui sound", length, 1, sampleRate, false);
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    AudioClip CreateDamageSound()
+    {
+        int sampleRate = 22050;
+        int length = sampleRate / 3;
+        float[] data = new float[length];
+
+        for (int i = 0; i < length; i++)
+        {
+            float t = i / (float)sampleRate;
+            float fade = 1f - i / (float)length;
+            float tone = Mathf.Sin(t * 160f * Mathf.PI * 2f);
+            float buzz = Mathf.Sin(t * 52f * Mathf.PI * 2f);
+            data[i] = (tone * 0.35f + buzz * 0.25f) * fade;
+        }
+
+        AudioClip clip = AudioClip.Create("damage sound", length, 1, sampleRate, false);
         clip.SetData(data, 0);
         return clip;
     }
