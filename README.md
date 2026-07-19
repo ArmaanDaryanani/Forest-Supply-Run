@@ -23,6 +23,7 @@ Current objective
 
 Collect the water food wood rope and map
 Find the radio battery
+Use the camp crate if you need help
 Avoid poison mushrooms and the wolf
 Return to camp and press E at the radio
 
@@ -31,6 +32,7 @@ Gameplay systems
 Supply collection
 Radio battery collection
 Medkits for healing
+Camp crate gives health and time
 Camp radio interaction
 Health tracking
 Timer tracking
@@ -52,6 +54,7 @@ Third person camera follow
 Five collectible supply items
 Radio battery item
 Two medkit items
+Camp crate item
 Camp radio interaction after collecting everything
 UI text for supplies health time battery and objective
 Interaction prompt when near supplies or camp
@@ -67,6 +70,7 @@ CheckpointGameManager.cs tracks supplies battery health timer UI sounds win and 
 CollectibleSupply.cs handles item collection
 BatteryPickup.cs handles battery collection
 MedkitPickup.cs handles healing
+CampCrate.cs handles the camp crate
 DamageHazard.cs handles poison mushroom damage
 EnemyPatrol.cs handles the wolf
 CampGoal.cs handles the camp radio

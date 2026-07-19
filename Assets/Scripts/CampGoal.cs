@@ -27,19 +27,20 @@ public class CampGoal : MonoBehaviour
 
         if (Vector3.Distance(transform.position, player.position) <= interactDistance)
         {
-            if (!gameManager.HasAllSupplies)
+            gameManager.ShowPrompt("press e to use radio");
+            if (Input.GetKeyDown(KeyCode.E))
             {
-                gameManager.ShowPrompt("need all supplies");
-            }
-            else if (!gameManager.HasBattery)
-            {
-                gameManager.ShowPrompt("need radio battery");
-            }
-            else
-            {
-                gameManager.ShowPrompt("press e to call for rescue");
-                if (Input.GetKeyDown(KeyCode.E))
+                if (!gameManager.HasAllSupplies)
                 {
+                    gameManager.ShowAction("radio needs 5 supplies");
+                }
+                else if (!gameManager.HasBattery)
+                {
+                    gameManager.ShowAction("radio needs battery");
+                }
+                else
+                {
+                    gameManager.ShowAction("calling for rescue");
                     gameManager.FinishCheckpoint();
                 }
             }

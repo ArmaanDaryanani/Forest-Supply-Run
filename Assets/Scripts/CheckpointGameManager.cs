@@ -15,11 +15,14 @@ public class CheckpointGameManager : MonoBehaviour
     int health;
     float timeLeft;
     float damageFlashTime;
+    float actionTextTime;
     string promptText = "";
+    string actionText = "";
     int promptFrame;
     bool checkpointComplete;
     bool gameOver;
     bool hasBattery;
+    bool campCrateOpened;
 
     public bool HasAllSupplies => suppliesCollected >= totalSupplies;
     public bool HasBattery => hasBattery;
@@ -57,6 +60,8 @@ public class CheckpointGameManager : MonoBehaviour
         {
             damageSound = CreateDamageSound();
         }
+
+        SpawnCampCrate();
     }
 
     void Update()
@@ -64,6 +69,11 @@ public class CheckpointGameManager : MonoBehaviour
         if (damageFlashTime > 0f)
         {
             damageFlashTime -= Time.deltaTime;
+        }
+
+        if (actionTextTime > 0f)
+        {
+            actionTextTime -= Time.deltaTime;
         }
 
         if (IsGameEnded)
@@ -81,6 +91,23 @@ public class CheckpointGameManager : MonoBehaviour
         {
             timeLeft = 0f;
             LoseGame();
+        }
+    }
+
+    public void OpenCampCrate()
+    {
+        if (IsGameEnded || campCrateOpened)
+        {
+            return;
+        }
+
+        campCrateOpened = true;
+        health = Mathf.Min(maxHealth, health + 1);
+        timeLeft = Mathf.Min(timeLimit, timeLeft + 20f);
+        ShowAction("camp crate opened health and time added");
+        if (audioSource != null && collectSound != null)
+        {
+            audioSource.PlayOneShot(collectSound);
         }
     }
 
@@ -151,6 +178,12 @@ public class CheckpointGameManager : MonoBehaviour
     {
         promptText = text;
         promptFrame = Time.frameCount;
+    }
+
+    public void ShowAction(string text)
+    {
+        actionText = text;
+        actionTextTime = 2.2f;
     }
 
     public void FinishCheckpoint()
@@ -229,6 +262,16 @@ public class CheckpointGameManager : MonoBehaviour
             promptShadow.normal.textColor = Color.black;
             DrawLabel(new Rect(Screen.width / 2f - 240f, Screen.height - 82f, 480f, 50f), promptText, promptStyle, promptShadow);
         }
+
+        if (actionTextTime > 0f)
+        {
+            GUIStyle actionStyle = new GUIStyle(mainStyle);
+            actionStyle.fontSize = 22;
+            actionStyle.alignment = TextAnchor.MiddleCenter;
+            GUIStyle actionShadow = new GUIStyle(actionStyle);
+            actionShadow.normal.textColor = Color.black;
+            DrawLabel(new Rect(Screen.width / 2f - 300f, 96f, 600f, 50f), actionText, actionStyle, actionShadow);
+        }
     }
 
     void DrawLabel(Rect rect, string text, GUIStyle style, GUIStyle shadowStyle)
@@ -252,15 +295,35 @@ public class CheckpointGameManager : MonoBehaviour
 
         if (!HasAllSupplies)
         {
-            return "objective collect supplies";
+            return "objective collect 5 supplies for radio";
         }
 
         if (!hasBattery)
         {
-            return "objective find the radio battery";
+            return "objective find battery for radio";
         }
 
-        return "objective return to camp radio";
+        return "objective return to radio at camp";
+    }
+
+    void SpawnCampCrate()
+    {
+        if (GameObject.Find("Camp Supply Crate") != null)
+        {
+            return;
+        }
+
+        GameObject crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        crate.name = "Camp Supply Crate";
+        crate.transform.position = new Vector3(-2.5f, 0.65f, -22f);
+        crate.transform.localScale = new Vector3(1.6f, 1.1f, 1.2f);
+        Renderer renderer = crate.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.material.color = new Color(0.45f, 0.24f, 0.08f);
+        }
+
+        crate.AddComponent<CampCrate>();
     }
 
     AudioClip CreateSound(float frequency, int lengthDivider)
